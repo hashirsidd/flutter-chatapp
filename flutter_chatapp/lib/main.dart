@@ -1,11 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_chatapp/screens/chatroomScreen.dart';
 import 'package:flutter_chatapp/screens/login.dart';
 import 'package:flutter_chatapp/screens/signup.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp();
+  await Firebase.initializeApp();
   
   runApp(MyApp());
 }
@@ -21,7 +22,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
 
       ),
-      home: SignUp(),
+      home: ChatRoom(),
+      // home: SignUp(),
       // home: LoginScreen(),
     );
   }

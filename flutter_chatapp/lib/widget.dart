@@ -35,8 +35,9 @@ class MyAppBar extends StatelessWidget with PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
-InputDecoration inputFieldDecoration( {String? hint}) {
+InputDecoration inputFieldDecoration( {String? hint, String? label}) {
   return InputDecoration(
+                                                                  labelText: label,
     hintText: hint,
     contentPadding: EdgeInsets.only(left: 5,top: 10),
     hintStyle: TextStyle(color: Colors.white54),

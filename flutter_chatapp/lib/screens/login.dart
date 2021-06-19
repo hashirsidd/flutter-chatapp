@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_chatapp/screens/signup.dart';
 import 'package:flutter_chatapp/widget.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,92 +16,99 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value: SystemUiOverlayStyle.light ,
+      value: SystemUiOverlayStyle.light,
       child: Scaffold(
         // appBar: MyAppBar(),
         body: SafeArea(
           child: Center(
             child: ListView(
               shrinkWrap: true,
-              children: <Widget>[Container(
-                padding: EdgeInsets.symmetric(horizontal: 24,vertical: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset("asset/images/logo.png", height: 50.0,)
-                        ,
-                        Text(
-                          "Sign in",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 40,
+              children: <Widget>[
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            "asset/images/logo.png",
+                            height: 50.0,
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 30),
-                    TextField(decoration: inputFieldDecoration(hint:"Email")),
-                    TextField(decoration: inputFieldDecoration(hint:"Password")),
-
-                    //     textField(
-                    //   hint: "Email",
-                    // ),
-                    // textField(
-                    //   hint: "Password",
-                    // ),
-                    SizedBox(height: 18),
-                    Container(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        "Forget Password",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                          Text(
+                            "Sign in",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 40,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 18),
-                    // signin button
-                    longButton(
-                      bgColor: Color(0xff2c69e1),
-                      textColor: Colors.white,
-                      text: "Sign In ",
-                    ),
-                    SizedBox(height: 18),
-                    // signin with google
-                    longButton(
-                      bgColor: Colors.white,
-                      textColor: Color(0xff2c69e1),
-                      text: "Sign In with Google",
-                    ),
-                    SizedBox(height: 18),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                          ),
+                      SizedBox(height: 30),
+                      TextField(
+                        // onSubmitted:,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: inputFieldDecoration(hint: "Email")),
+                      TextField(
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: inputFieldDecoration(hint: "Password")),
+                      SizedBox(height: 18),
+                      Container(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          "Forget Password",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
-                        Text(
-                          "Register now",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 17,
-                            decoration: TextDecoration.underline,
+                      ),
+                      SizedBox(height: 18),
+                      // signin button
+                      longButton(
+                        bgColor: Color(0xff2c69e1),
+                        textColor: Colors.white,
+                        text: "Sign In ",
+                      ),
+                      SizedBox(height: 18),
+                      // signin with google
+                      longButton(
+                        bgColor: Colors.white,
+                        textColor: Color(0xff2c69e1),
+                        text: "Sign In with Google",
+                      ),
+                      SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account? ",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          GestureDetector(
+                            onTap: (){
+                              Navigator.pushReplacement(
+                                  context, MaterialPageRoute(builder: (context) => SignUp()));
+                            },
+                            child: Text(
+                              "Register now",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),],
+              ],
             ),
           ),
         ),
-
       ),
     );
   }
