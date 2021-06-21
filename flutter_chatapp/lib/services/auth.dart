@@ -1,8 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_chatapp/model/user.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 class AuthMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,6 +21,8 @@ class AuthMethods {
   }
 
   Future signUpWithEmailAndPassword({required String email, required String password}) async {
+    email = email.trim();
+    password = password..trim();
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);

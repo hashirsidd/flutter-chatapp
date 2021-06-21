@@ -6,12 +6,16 @@ import 'package:flutter_chatapp/screens/signup.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  
+  try {
+    await Firebase.initializeApp();
+  }catch(e){
+    print("Error initializing Firebase App ${e.toString()} ");
+  }
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+ 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -19,7 +23,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: Color(0xff1f1f1f),
-        primarySwatch: Colors.blue,
+        // primarySwatch: ,
 
       ),
       home: ChatRoom(),
