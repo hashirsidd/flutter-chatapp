@@ -43,56 +43,66 @@ class _SigninState extends State<Signin> {
               passwordTextEditingController.text.trim())
           .then((val) {
         if (val != null) {
+
           dbMethods
               .getUserByEmail(emailTextEditingController.text.trim())
               .then((value) {
-            if(value != null){
+            if (value != null) {
               userInfo = value;
               Map<String, dynamic> data =
-              userInfo!.docs[0].data() as Map<String, dynamic>;
+                  userInfo!.docs[0].data() as Map<String, dynamic>;
               HelperFunction.saveuserloggedinsharepreference(true);
               HelperFunction.saveusernamesharepreference(data['name']);
               HelperFunction.saveuseremailsharepreference(data['email']);
               Constants.loggedInUserName = data['name'];
-                  // print( "username : ${Constants.loggedInUserName }") ;
+              Constants.loggedInUserEmail = data['email'];
+              // print( "username : ${Constants.loggedInUserName }") ;
               Navigator.pushReplacement(
                   context, MaterialPageRoute(builder: (context) => ChatRoom()));
             }
           });
-
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          final snackBar = SnackBar(
+            content: Text('Invalid Email or Password'),
+            elevation: 50,
+          );
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
         }
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
       value: SystemUiOverlayStyle.light,
       child: isLoading
           ? Scaffold(
-        backgroundColor: Color(0xff1f1f1f),
-            body: Center(
-                child: Column(
-
+              backgroundColor: Color(0xff1f1f1f),
+              body: Center(
+                  child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     child: CircularProgressIndicator(),
                   ),
-                  Container(
-                    padding: EdgeInsets.only(top: 15),
-                    child: Text(
-                      "Signing in..",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        decoration: TextDecoration.none,
-                      ),
-                    ),
-                  ),
+                  // Container(
+                  //   padding: EdgeInsets.only(top: 15),
+                  //   child: Text(
+                  //     "Signing in..",
+                  //     style: TextStyle(
+                  //       fontSize: 16,
+                  //       color: Colors.white,
+                  //       decoration: TextDecoration.none,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               )),
-          )
+            )
           : Scaffold(
               // appBar: MyAppBar(),
               body: SafeArea(
@@ -131,11 +141,13 @@ class _SigninState extends State<Signin> {
                                     validator: (val) {
                                       if (val!.isEmpty) {
                                         return "This field is required";
-                                      } else if (EmailValidator.validate(val) ==
+                                      } else if (EmailValidator.validate(
+                                              val.trim()) ==
                                           false) {
                                         return "Enter valid email address";
                                       }
                                     },
+                                    keyboardType: TextInputType.emailAddress,
                                     style: TextStyle(
                                       color: Colors.white,
                                     ),
@@ -179,6 +191,8 @@ class _SigninState extends State<Signin> {
                             // signin button
                             GestureDetector(
                               onTap: () {
+                                FocusScope.of(context)
+                                    .requestFocus(new FocusNode());
                                 signIn();
                               },
                               child: longButton(

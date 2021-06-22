@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter_chatapp/helper/constants.dart';
 import 'package:flutter_chatapp/helper/helperFunction.dart';
 import 'package:flutter_chatapp/screens/chatroomScreen.dart';
 import 'package:flutter_chatapp/services/auth.dart';
@@ -48,12 +49,14 @@ class _SignUpState extends State<SignUp> {
             userNameTextEditingController.text.trim());
         HelperFunction.saveuseremailsharepreference(
             emailTextEditingController.text.trim());
-
+        Constants.loggedInUserName = userNameTextEditingController.text.trim();
+        Constants.loggedInUserEmail = emailTextEditingController.text.trim();
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => ChatRoom()));
       });
     }
   }
+
 
   final formkey = GlobalKey<FormState>();
   TextEditingController userNameTextEditingController =

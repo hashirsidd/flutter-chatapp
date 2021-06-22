@@ -13,6 +13,7 @@ class DatabaseMethods {
         .where("name", isEqualTo: userName)
         .get();
   }
+
   getUserByEmail(String userEmail) async {
     return await FirebaseFirestore.instance
         .collection('users')
@@ -25,6 +26,17 @@ class DatabaseMethods {
         .collection('ChatRoom')
         .doc(chatRoomId)
         .set(chatRoomMap)
+        .catchError((e) {
+      print(e.toString());
+    });
+  }
+
+  getConversationMessage(String chatRoomId, messageMap) {
+    FirebaseFirestore.instance
+        .collection('ChatRoom')
+        .doc(chatRoomId)
+        .collection('Chats')
+        .add(messageMap)
         .catchError((e) {
       print(e.toString());
     });

@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_chatapp/helper/constants.dart';
 import 'package:flutter_chatapp/helper/helperFunction.dart';
+import 'package:flutter_chatapp/screens/conversationScreen.dart';
 import 'package:flutter_chatapp/services/database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widget.dart';
 
 class SearchScreen extends StatefulWidget {
-  String roomuserEmail= "" ;
+  String roomuserEmail = "";
   @override
   _SearchScreenState createState() => _SearchScreenState();
 }
@@ -25,6 +26,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   QuerySnapshot? searchSnapshot;
   initiateSearch() async {
+    FocusScope.of(context)
+        .requestFocus(new FocusNode());
     await dbMethods
         .getUserByName(searchEditingController.text.trim())
         .then((val) {
@@ -37,32 +40,36 @@ class _SearchScreenState extends State<SearchScreen> {
   sendUserToChatRoom(String userName) {
     List<String> users = [userName, CurrentUser];
     dbMethods.createChatRoom(users[0], users[1]);
-    Map<String, dynamic> chatRoomMap= {
-      "users" : users,
-
-      
+    Map<String, dynamic> chatRoomMap = {
+      "users": users,
     };
   }
 
-  sendMessage(String userName, String roomUserEmail){
-    List<String> users = [Constants.loggedInUserName,userName];
+  sendMessage(String userName, String roomUserEmail) {
+    if (roomUserEmail != Constants.loggedInUserEmail) {
+      List<String> users = [Constants.loggedInUserName, userName];
 
-    String chatRoomId = getChatRoomId(Constants.loggedInUserEmail,roomUserEmail);
+      String chatRoomId =
+          getChatRoomId(Constants.loggedInUserEmail, roomUserEmail);
 
-    print(" helloooo : $users  $chatRoomId");
-    // Map<String, dynamic> chatRoom = {
-    //   "users": users,
-    //   "chatRoomId" : chatRoomId,
-    // };
-    //
-    // dbMethods.addChatRoom(chatRoom, chatRoomId);
-    //
-    // Navigator.push(context, MaterialPageRoute(
-    //     builder: (context) => Chat(
-    //       chatRoomId: chatRoomId,
-    //     )
-    // ));
+      print(" message : $users  $chatRoomId");
+      Map<String, dynamic> chatRoom = {
+        "users": users,
+        "chatRoomId": chatRoomId,
+      };
 
+      dbMethods.createChatRoom(chatRoomId, chatRoom);
+
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ChatScreen(
+                  // chatRoomId: chatRoomId,
+             reciver: userName, chatRoomID: chatRoomId,
+              )));
+    } else {
+      print("Cant send message");
+    }
   }
 
   getChatRoomId(String a, String b) {
@@ -83,6 +90,7 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Column(
               children: [
                 Container(
+                  height: 50,
                   padding: EdgeInsets.only(right: 16),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -111,7 +119,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             hintText: 'Search user...',
                             border: InputBorder.none,
                             focusColor: Colors.white,
-                            contentPadding: EdgeInsets.all(20),
+                            contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 26),
                           ),
                         ),
                       ),
@@ -141,13 +149,17 @@ class _SearchScreenState extends State<SearchScreen> {
                 itemBuilder: (context, index) {
                   Map<String, dynamic> data = searchSnapshot!.docs[index].data()
                       as Map<String, dynamic>;
-                  return SearchTile(data['name'],  data['email']);
-
+                  return SearchTile(data['name'], data['email']);
                 }),
           )
         : Container();
   }
-  Widget SearchTile(String uname,String uemail) {
+
+  Widget SearchTile(String uname, String uemail) {
+    bool visible = true;
+    if(uemail == Constants.loggedInUserEmail){
+      visible =  false;
+    }
     return Container(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16),
@@ -176,8 +188,8 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             Spacer(),
-            GestureDetector(
-              onTap: (){
+            visible? GestureDetector(
+              onTap: () {
                 widget.roomuserEmail = uemail;
                 sendMessage(uname, uemail);
                 // print(Constants.loggedInUserName);
@@ -200,12 +212,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         colors: [Colors.blueAccent, Colors.blue]),
                     borderRadius: BorderRadius.circular(40),
                   )),
-            ),
+            ): Container(),
           ],
         ),
       ),
     );
   }
-
 }
-

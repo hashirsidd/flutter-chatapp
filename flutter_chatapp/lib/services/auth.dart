@@ -1,4 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_chatapp/helper/constants.dart';
+import 'package:flutter_chatapp/helper/helperFunction.dart';
 import 'package:flutter_chatapp/model/user.dart';
 
 class AuthMethods {
@@ -45,6 +47,11 @@ class AuthMethods {
 
   Future signOut() async {
     try {
+      Constants.loggedInUserEmail = "";
+      Constants.loggedInUserName = "";
+      HelperFunction.saveuserloggedinsharepreference(false);
+      HelperFunction.saveuseremailsharepreference("");
+      HelperFunction.saveusernamesharepreference("");
       return await _auth.signOut();
     } catch (e) {
       print(e.toString());
