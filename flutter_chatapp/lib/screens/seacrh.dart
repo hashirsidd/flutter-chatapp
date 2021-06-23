@@ -73,11 +73,10 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   getChatRoomId(String a, String b) {
-    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
-      return "$b\_$a";
-    } else {
-      return "$a\_$b";
-    }
+    List<String> x =[a,b];
+    x.sort();
+    print("${x[0]}_${x[1]}");
+     return "${x[0]}_${x[1]}";
   }
 
   @override

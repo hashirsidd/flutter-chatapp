@@ -31,12 +31,21 @@ class DatabaseMethods {
     });
   }
 
-  getConversationMessage(String chatRoomId, messageMap) {
+  sendConversationMessage(String chatRoomId, messageMap) {
     FirebaseFirestore.instance
         .collection('ChatRoom')
         .doc(chatRoomId)
         .collection('Chats')
         .add(messageMap)
+        .catchError((e) {
+      print(e.toString());
+    });
+  }
+  getConversationMessage(String chatRoomId) async {
+    return await  FirebaseFirestore.instance
+        .collection('ChatRoom') .doc(chatRoomId) .collection('Chats')   .orderBy('time')
+        // .where('ChatRoom' , isEqualTo: chatRoomId)
+        .get()
         .catchError((e) {
       print(e.toString());
     });
