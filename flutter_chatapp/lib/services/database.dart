@@ -41,13 +41,21 @@ class DatabaseMethods {
       print(e.toString());
     });
   }
-  getConversationMessage(String chatRoomId) async {
-    return await  FirebaseFirestore.instance
-        .collection('ChatRoom') .doc(chatRoomId) .collection('Chats')   .orderBy('time')
-        // .where('ChatRoom' , isEqualTo: chatRoomId)
-        .get()
-        .catchError((e) {
-      print(e.toString());
-    });
+
+  getConversationMessage(String chatRoomId) {
+    return FirebaseFirestore.instance
+        .collection('ChatRoom')
+        .doc(chatRoomId)
+        .collection('Chats')
+        .orderBy('time')
+        .get() ;
+
+  }
+
+  getChats(String userEmail) async {
+    return await FirebaseFirestore.instance
+        .collection('ChatRoom')
+        .where('emails', arrayContains: userEmail)
+        .get();
   }
 }

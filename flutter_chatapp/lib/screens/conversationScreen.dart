@@ -47,49 +47,43 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  QuerySnapshot? snapshot;
-  getMessages(chatRoomId) async {
-    await dbMethods.getConversationMessage(chatRoomId).then((val) {
-      snapshot = val;
+  // Stream<QuerySnapshot>? chats;
+
+  QuerySnapshot? chats;
+  getMessages(chatRoomId) {
+    dbMethods
+        .getConversationMessage(chatRoomId)
+        .then((QuerySnapshot querySnapshot) {
+      chats = querySnapshot;
     });
   }
-
-  Widget chatMessages() {
-    return snapshot != null
-        ? Container(
-            child: ListView.builder(
-                itemCount: snapshot!.docs.length,
-                controller: _scrollController,
-                shrinkWrap: true,
-                itemBuilder: (context, index) {
-                  Map<String, dynamic> data =
-                      snapshot!.docs[index].data() as Map<String, dynamic>;
-                  print("hereee ${snapshot!.docs.length}");
-                  return MessageTile(
-                    message: data["message"],
-                    sendByMe: Constants.loggedInUserName == data["sender"],
-                  );
-                }),
-          )
-        : Container();
-  }
-
-  ScrollController _scrollController = new ScrollController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Color(0xff2f3337),
         backwardsCompatibility: false,
         systemOverlayStyle:
             SystemUiOverlayStyle(statusBarColor: Color(0xff1f1f1f)),
         elevation: 2.0,
-        title: Padding(
-          padding: EdgeInsets.only(left: 10),
-          child: Text(
-            "${widget.reciver}",
-          ),
+        title: Row(
+          children: [
+            IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (context) => ChatRoom()));
+              },
+            ),
+            Padding(
+              padding: EdgeInsets.only(left: 10),
+              child: Text(
+                "${widget.reciver}",
+              ),
+            ),
+          ],
         ),
         actions: <Widget>[
           PopupMenuButton<String>(
@@ -107,76 +101,86 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       body: Container(
-        child: Stack(
-          children: [
-            chatMessages(),
-            Container(
-              alignment: Alignment.bottomCenter,
-              width: MediaQuery.of(context).size.width,
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 5),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        begin: Alignment.bottomLeft,
-                        end: Alignment.topRight, // 4c5258
-                        colors: [Color(0xff2f3337), Color(0xff4c5258)]),
-                    borderRadius: BorderRadius.circular(32),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: Form(
-                          child: TextFormField(
-                            controller: messageEditing,
-                            maxLines: null,
-                            keyboardType: TextInputType.multiline,
-                            textCapitalization: TextCapitalization.sentences,
-                            style: TextStyle(
-                              color: Colors.white,
-                              decoration: TextDecoration.none,
-                            ),
-                            decoration: InputDecoration(
-                              hintStyle: TextStyle(
-                                  fontSize: 17, color: Colors.white70),
-                              hintText: 'Search user...',
-                              border: InputBorder.none,
-                              focusColor: Colors.white,
-                              contentPadding: EdgeInsets.only(
-                                  top: 10, bottom: 10, left: 20, right: 5),
+        child: SizedBox(
+          child: ClipRect(
+            child: Column(
+              children: [
+                chatMessages(
+                  chatId: widget.chatRoomID,
+                ),
+                Container(
+                  alignment: Alignment.bottomCenter,
+                  width: MediaQuery.of(context).size.width,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                            begin: Alignment.bottomLeft,
+                            end: Alignment.topRight, // 4c5258
+                            colors: [Colors.blueAccent, Colors.blue]),
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Form(
+                              child: TextFormField(
+                                controller: messageEditing,
+                                maxLines: null,
+                                keyboardType: TextInputType.multiline,
+                                textCapitalization:
+                                    TextCapitalization.sentences,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  decoration: TextDecoration.none,
+                                ),
+                                decoration: InputDecoration(
+                                  hintStyle: TextStyle(
+                                      fontSize: 17, color: Colors.white70),
+                                  hintText: 'Write message...',
+                                  border: InputBorder.none,
+                                  focusColor: Colors.white,
+                                  contentPadding: EdgeInsets.only(
+                                      top: 10,
+                                      bottom: 10,
+                                      left: 20,
+                                      right: 5),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          GestureDetector(
+                              onTap: () {
+                                if (messageEditing.text.trim() != "") {
+                                  print(messageEditing.text);
+                                  sendMessage();
+                                  // _scrollController.animateTo(
+                                  //   _scrollController.position.maxScrollExtent,
+                                  //   curve: Curves.easeOut,
+                                  //   duration: const Duration(milliseconds: 500),
+                                  // );
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 15, right: 16),
+                                child: Icon(
+                                  Icons.send,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              )),
+                        ],
                       ),
-                      GestureDetector(
-                          onTap: () {
-                            if (messageEditing.text.trim() != "") {
-                              print(messageEditing.text);
-                              sendMessage();
-                              _scrollController.animateTo(
-                                _scrollController.position.maxScrollExtent,
-                                curve: Curves.easeOut,
-                                duration: const Duration(milliseconds: 500),
-                              );
-                            }
-                          },
-                          child: Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: 15, right: 16),
-                            child: Icon(
-                              Icons.send,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          )),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -193,12 +197,12 @@ class MessageTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(
-          top: 8, bottom: 8, left: sendByMe ? 0 : 24, right: sendByMe ? 24 : 0),
+          top: 6, left: sendByMe ? 0 : 10, right: sendByMe ? 10 : 0),
       alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin:
             sendByMe ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(top: 17, bottom: 17, left: 20, right: 20),
+        padding: EdgeInsets.only(top: 15, bottom: 15, left: 15, right: 15),
         decoration: BoxDecoration(
             borderRadius: sendByMe
                 ? BorderRadius.only(
@@ -224,3 +228,90 @@ class MessageTile extends StatelessWidget {
     );
   }
 }
+
+class chatMessages extends StatefulWidget {
+  final String? chatId;
+  chatMessages({required this.chatId});
+  @override
+  _chatMessagesState createState() => _chatMessagesState();
+}
+
+class _chatMessagesState extends State<chatMessages> {
+  late Stream<QuerySnapshot> _usersStream;
+  @override
+  void initState() {
+    _usersStream = FirebaseFirestore.instance
+        .collection('ChatRoom')
+        .doc(widget.chatId)
+        .collection('Chats')
+        .orderBy('time')
+        .snapshots();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _usersStream,
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasData) {
+          return Expanded(
+            child: new ListView(
+              shrinkWrap: true,
+              // controller: _scrollController,
+              children: snapshot.data!.docs.map((DocumentSnapshot document) {
+                Map<String, dynamic> data =
+                    document.data() as Map<String, dynamic>;
+                return MessageTile(
+                  message: data['message'],
+                  sendByMe: Constants.loggedInUserName == data["sender"],
+                );
+              }).toList(),
+            ),
+          );
+        }
+        return Spacer();
+
+        // if (snapshot.connectionState == ConnectionState.waiting) {
+        //   return Text("Loading");
+        // }
+      },
+    );
+  }
+}
+
+/**
+Widget chatMessages(BuildContext context) {
+  final Stream<QuerySnapshot> _usersStream = FirebaseFirestore.instance
+      .collection('ChatRoom')
+      .doc(wichatRoomId)
+      .collection('Chats')
+      .orderBy('time').snapshots();
+  return StreamBuilder<QuerySnapshot>(
+    stream: chats,
+    builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+      return snapshot.hasData
+          ? ListView.builder(
+          itemCount: snapshot.data!.docs.length,
+          itemBuilder: (context, index) {
+            print(snapshot.data!.docs.length);
+            return MessageTile(
+              message: snapshot.,
+              sendByMe: true,
+            );
+            //   return MessageTile(
+            //     message: snapshot.data?.docs[index].data()!["message"],
+            //     sendByMe: Constants.loggedInUserName == snapshot.data?.docs[index].data()!["sendBy"],
+            //   // );
+            //   // return MessageTile(
+            //   //   message: data["message"],
+            //   //   sendByMe: Constants.loggedInUserName == data!["sender"],
+            //   // );
+            // );
+          })
+          : Container();
+    },
+  );
+}
+
+    **/

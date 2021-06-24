@@ -47,14 +47,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   sendMessage(String userName, String roomUserEmail) {
     if (roomUserEmail != Constants.loggedInUserEmail) {
-      List<String> users = [Constants.loggedInUserName, userName];
-
+      List<String> userNames = [Constants.loggedInUserName, userName];
+      List<String> userEmails = [Constants.loggedInUserEmail, roomUserEmail];
       String chatRoomId =
           getChatRoomId(Constants.loggedInUserEmail, roomUserEmail);
 
-      print(" message : $users  $chatRoomId");
+      // print(" message : $users  $chatRoomId");
       Map<String, dynamic> chatRoom = {
-        "users": users,
+        "users": userNames,
+        "emails": userEmails,
         "chatRoomId": chatRoomId,
       };
 
@@ -67,9 +68,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   // chatRoomId: chatRoomId,
              reciver: userName, chatRoomID: chatRoomId,
               )));
-    } else {
-      print("Cant send message");
-    }
+    } 
   }
 
   getChatRoomId(String a, String b) {
