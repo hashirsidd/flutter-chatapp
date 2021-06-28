@@ -374,102 +374,82 @@ class chatMessages extends StatefulWidget {
 class _chatMessagesState extends State<chatMessages> {
   late Stream<QuerySnapshot> _usersStream;
   int limit = 20;
+  bool loadMessages = false;
 
  late  ScrollController _controller;
-  _scrollListener() {
-    // if _scroll reach top
-    if (_controller.position.userScrollDirection ==
-        ScrollDirection.forward) {
-             print("Scroll up");
-      print("000000000000000000000000000000000000000 $limit");
-      _usersStream = FirebaseFirestore.instance
-          .collection('ChatRoom')
-          .doc(widget.chatId)
-          .collection('Chats')
-          .orderBy('time',descending: false).limitToLast(limit)
-          .snapshots();
-      setState(() {
-        limit = limit + 20;
 
-      });
-
-    }
-  }
   @override
   void initState() {
     _usersStream = FirebaseFirestore.instance
         .collection('ChatRoom')
         .doc(widget.chatId)
         .collection('Chats')
-        .orderBy('time',descending: false).limitToLast(20)
+        .orderBy('time',descending: false)
         .snapshots();
     _controller = ScrollController();
-    _controller.addListener(_scrollListener);
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: _usersStream,
+      stream:_usersStream,
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        
-
 
         if (snapshot.hasData) {
           return Expanded(
             child: new ListView(
-              shrinkWrap: true,
-              controller: _controller,
-              scrollDirection: Axis.vertical,
-              children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                if (snapshot.data!.docs.length > 0) {
-                  Timer(
-                      Duration(milliseconds: 0),
-                      () => _controller.animateTo(
-                          _controller.position.maxScrollExtent,
-                          curve: Curves.easeOut,
-                          duration: const Duration(milliseconds: 300)));
-                }
-                Map<String, dynamic> data =
-                    document.data() as Map<String, dynamic>;
-                if (Constants.loggedInUserName != data["sender"] &&
-                    data['seen'] == false) {
-                  FirebaseFirestore.instance
-                      .collection('ChatRoom')
-                      .doc(widget.chatId)
-                      .collection('Chats')
-                      .doc(document.id)
-                      .update({
-                    'seen': true,
-                  });
-                  FirebaseFirestore.instance
-                      .collection('ChatRoom')
-                      .doc(widget.chatId)
-                      .update({'isRead': true, "unRead": 0});
-                }
-                String date = "";
-                if (data['time'] != null) {
-                  DateTime fullDate =
-                      DateTime.parse(data['time'].toDate().toString());
+          shrinkWrap: true,
+          controller: _controller,
+          scrollDirection: Axis.vertical,
+          children: snapshot.data!.docs.map((DocumentSnapshot document) {
+            if (snapshot.data!.docs.length > 0) {
+              Timer(
+                  Duration(milliseconds: 0),
+                  () => _controller.animateTo(
+                      _controller.position.maxScrollExtent,
+                      curve: Curves.easeOut,
+                      duration: const Duration(milliseconds: 300)));
+            }
+            Map<String, dynamic> data =
+                document.data() as Map<String, dynamic>;
+            if (Constants.loggedInUserName != data["sender"] &&
+                data['seen'] == false) {
+              FirebaseFirestore.instance
+                  .collection('ChatRoom')
+                  .doc(widget.chatId)
+                  .collection('Chats')
+                  .doc(document.id)
+                  .update({
+                'seen': true,
+              });
+              FirebaseFirestore.instance
+                  .collection('ChatRoom')
+                  .doc(widget.chatId)
+                  .update({'isRead': true, "unRead": 0});
+            }
+            String date = "";
+            if (data['time'] != null) {
+              DateTime fullDate =
+                  DateTime.parse(data['time'].toDate().toString());
 
-                  DateTime dateToday =
-                      DateTime.parse(DateTime.now().toString());
-                  if (date == DateFormat.MMMd().format(dateToday).toString()) {
-                    date = DateFormat.MMMd().format(fullDate).toString();
-                  } else {
-                    date = DateFormat.jm().format(fullDate).toString();
-                  }
-                }
+              DateTime dateToday =
+                  DateTime.parse(DateTime.now().toString());
+              if (date == DateFormat.MMMd().format(dateToday).toString()) {
+                date = DateFormat.MMMd().format(fullDate).toString();
+              } else {
+                date = DateFormat.jm().format(fullDate).toString();
+              }
+            }
 
-                print(date);
-                return MessageTile(
-                  message: data['message'],
-                  sendByMe: Constants.loggedInUserName == data["sender"],
-                  seen: data['seen'],
-                  date: date,
-                );
-              }).toList(),
+            print(date);
+            return MessageTile(
+              message: data['message'],
+              sendByMe: Constants.loggedInUserName == data["sender"],
+              seen: data['seen'],
+              date: date,
+            );
+          }).toList(),
             ),
           );
         }
