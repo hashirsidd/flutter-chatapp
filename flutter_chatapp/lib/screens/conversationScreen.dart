@@ -1,27 +1,40 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_chatapp/helper/constants.dart';
 import 'package:flutter_chatapp/screens/chatroomScreen.dart';
 import 'package:flutter_chatapp/services/database.dart';
 import 'dart:io';
 
+import 'package:intl/intl.dart';
+
 class ChatScreen extends StatefulWidget {
   String reciver;
   String chatRoomID;
-  ChatScreen({required this.reciver, required this.chatRoomID});
+  String recipientEmail;
+  ChatScreen(
+      {required this.reciver,
+      required this.chatRoomID,
+      required this.recipientEmail});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+
   @override
   void initState() {
     getMessages(widget.chatRoomID);
+
     super.initState();
   }
 
+  String userStatus = "";
   void handleClick(String value) {
     switch (value) {
       case 'Logout':
@@ -38,13 +51,20 @@ class _ChatScreenState extends State<ChatScreen> {
     Map<String, dynamic> messageMap = {
       'sender': Constants.loggedInUserName,
       'message': messageEditing.text.trim(),
-      'time': DateTime.now().millisecondsSinceEpoch,
+      'time': FieldValue.serverTimestamp(),
+      'seen': false,
     };
-    dbMethods.sendConversationMessage(widget.chatRoomID, messageMap);
-    setState(() {
-      messageEditing.clear();
-      getMessages(widget.chatRoomID);
-    });
+    dbMethods.sendConversationMessage(
+        widget.chatRoomID,
+        messageMap,
+        messageEditing.text.trim(),
+        DateTime.now().millisecondsSinceEpoch,
+        Constants.loggedInUserName);
+    FirebaseFirestore.instance
+        .collection('users')
+        .doc(Constants.loggedInUserEmail)
+        .get();
+
   }
 
   // Stream<QuerySnapshot>? chats;
@@ -60,30 +80,59 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Stream collectionStream = FirebaseFirestore.instance
+    //     .collection('users')
+    //     .doc(widget.recipientEmail)
+    //     .snapshots().listen((event) {
+    //           print(event);
+    // });
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         backgroundColor: Color(0xff2f3337),
         backwardsCompatibility: false,
         systemOverlayStyle:
             SystemUiOverlayStyle(statusBarColor: Color(0xff1f1f1f)),
         elevation: 2.0,
-        title: Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: () {
-                Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => ChatRoom()));
-              },
-            ),
-            Padding(
-              padding: EdgeInsets.only(left: 10),
-              child: Text(
+        title: Padding(
+          padding: EdgeInsets.only(left: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
                 "${widget.reciver}",
               ),
-            ),
-          ],
+              StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(widget.recipientEmail)
+                      .snapshots(),
+                  builder: (BuildContext context,
+                      AsyncSnapshot<DocumentSnapshot> snapshot) {
+                    if(snapshot.data != null){
+                      if (snapshot.hasError) {
+                        return Text(
+                          'Something went wrong',
+                          style: TextStyle(fontSize: 10),
+                        );
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Text(
+                          "Loading",
+                          style: TextStyle(fontSize: 10),
+                        );
+                      }
+                      if (snapshot.hasData) {
+                        return Text(
+                          snapshot.data!['status'],
+                          style: TextStyle(fontSize: 12),
+                        );
+                      }
+                    }
+                    return Container() ;
+                  }),
+            ],
+          ),
         ),
         actions: <Widget>[
           PopupMenuButton<String>(
@@ -144,10 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   border: InputBorder.none,
                                   focusColor: Colors.white,
                                   contentPadding: EdgeInsets.only(
-                                      top: 10,
-                                      bottom: 10,
-                                      left: 20,
-                                      right: 5),
+                                      top: 10, bottom: 10, left: 20, right: 5),
                                 ),
                               ),
                             ),
@@ -157,11 +203,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 if (messageEditing.text.trim() != "") {
                                   print(messageEditing.text);
                                   sendMessage();
-                                  // _scrollController.animateTo(
-                                  //   _scrollController.position.maxScrollExtent,
-                                  //   curve: Curves.easeOut,
-                                  //   duration: const Duration(milliseconds: 500),
-                                  // );
+                                  messageEditing.clear();
                                 }
                               },
                               child: Padding(
@@ -190,42 +232,135 @@ class _ChatScreenState extends State<ChatScreen> {
 class MessageTile extends StatelessWidget {
   final String message;
   final bool sendByMe;
+  final bool seen;
+  final String date;
 
-  MessageTile({required this.message, required this.sendByMe});
+  MessageTile(
+      {required this.message,
+      required this.sendByMe,
+      required this.seen,
+      required this.date});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(
-          top: 6, left: sendByMe ? 0 : 10, right: sendByMe ? 10 : 0),
-      alignment: sendByMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin:
-            sendByMe ? EdgeInsets.only(left: 30) : EdgeInsets.only(right: 30),
-        padding: EdgeInsets.only(top: 15, bottom: 15, left: 15, right: 15),
-        decoration: BoxDecoration(
-            borderRadius: sendByMe
-                ? BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomLeft: Radius.circular(23))
-                : BorderRadius.only(
-                    topLeft: Radius.circular(23),
-                    topRight: Radius.circular(23),
-                    bottomRight: Radius.circular(23)),
-            gradient: LinearGradient(
-              colors: sendByMe
-                  ? [const Color(0xff007EF4), const Color(0xff2A75BC)]
-                  : [const Color(0x1AFFFFFF), const Color(0x1AFFFFFF)],
-            )),
-        child: Text(message,
-            textAlign: TextAlign.start,
-            style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w300)),
-      ),
-    );
+    return sendByMe
+        ? Row(
+            children: [
+              Spacer(),
+              Container(
+                padding: EdgeInsets.only(top: 6, left: 0, right: 10),
+                alignment: Alignment.centerRight,
+                child: Container(
+                  margin: EdgeInsets.only(left: 30),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xff007EF4),
+                          const Color(0xff2A75BC)
+                        ],
+                      )),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.only(
+                            top: 10, bottom: 10, left: 10, right: 5),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.65,
+                        ),
+                        child: Text(message,
+                            textAlign: TextAlign.start,
+                            softWrap: true,
+                            overflow: TextOverflow.clip,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w300)),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(bottom: 10, right: 5),
+                        child: Text(date,
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w300)),
+                      ),
+                      seen != true
+                          ? Container(
+                              padding: EdgeInsets.only(bottom: 10, right: 10),
+                              alignment: Alignment.centerRight,
+                              child: Icon(
+                                Icons.check_circle_outline_sharp,
+                                color: Colors.white,
+                                size: 15,
+                              ),
+                            )
+                          : Container(
+                              padding: EdgeInsets.only(bottom: 10, right: 10),
+                              alignment: Alignment.centerRight,
+                              child: Icon(
+                                Icons.check_circle_rounded,
+                                color: Colors.white,
+                                size: 15,
+                              ),
+                            )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          )
+        : Row(
+            children: [
+              Container(
+                padding: EdgeInsets.only(top: 6, left: 10, right: 0),
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  margin: EdgeInsets.only(right: 30),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0x1AFFFFFF),
+                          const Color(0x1AFFFFFF)
+                        ],
+                      )),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: EdgeInsets.only(
+                            top: 10, bottom: 10, left: 10, right: 5),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.65,
+                        ),
+                        child: Text(message,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w300)),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(bottom: 10, right: 10),
+                        child: Text(date,
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w300)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Spacer(),
+            ],
+          );
   }
 }
 
@@ -238,14 +373,38 @@ class chatMessages extends StatefulWidget {
 
 class _chatMessagesState extends State<chatMessages> {
   late Stream<QuerySnapshot> _usersStream;
+  int limit = 20;
+
+ late  ScrollController _controller;
+  _scrollListener() {
+    // if _scroll reach top
+    if (_controller.position.userScrollDirection ==
+        ScrollDirection.forward) {
+             print("Scroll up");
+      print("000000000000000000000000000000000000000 $limit");
+      _usersStream = FirebaseFirestore.instance
+          .collection('ChatRoom')
+          .doc(widget.chatId)
+          .collection('Chats')
+          .orderBy('time',descending: false).limitToLast(limit)
+          .snapshots();
+      setState(() {
+        limit = limit + 20;
+
+      });
+
+    }
+  }
   @override
   void initState() {
     _usersStream = FirebaseFirestore.instance
         .collection('ChatRoom')
         .doc(widget.chatId)
         .collection('Chats')
-        .orderBy('time')
+        .orderBy('time',descending: false).limitToLast(20)
         .snapshots();
+    _controller = ScrollController();
+    _controller.addListener(_scrollListener);
     super.initState();
   }
 
@@ -254,64 +413,68 @@ class _chatMessagesState extends State<chatMessages> {
     return StreamBuilder<QuerySnapshot>(
       stream: _usersStream,
       builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        
+
+
         if (snapshot.hasData) {
           return Expanded(
             child: new ListView(
               shrinkWrap: true,
-              // controller: _scrollController,
+              controller: _controller,
+              scrollDirection: Axis.vertical,
               children: snapshot.data!.docs.map((DocumentSnapshot document) {
+                if (snapshot.data!.docs.length > 0) {
+                  Timer(
+                      Duration(milliseconds: 0),
+                      () => _controller.animateTo(
+                          _controller.position.maxScrollExtent,
+                          curve: Curves.easeOut,
+                          duration: const Duration(milliseconds: 300)));
+                }
                 Map<String, dynamic> data =
                     document.data() as Map<String, dynamic>;
+                if (Constants.loggedInUserName != data["sender"] &&
+                    data['seen'] == false) {
+                  FirebaseFirestore.instance
+                      .collection('ChatRoom')
+                      .doc(widget.chatId)
+                      .collection('Chats')
+                      .doc(document.id)
+                      .update({
+                    'seen': true,
+                  });
+                  FirebaseFirestore.instance
+                      .collection('ChatRoom')
+                      .doc(widget.chatId)
+                      .update({'isRead': true, "unRead": 0});
+                }
+                String date = "";
+                if (data['time'] != null) {
+                  DateTime fullDate =
+                      DateTime.parse(data['time'].toDate().toString());
+
+                  DateTime dateToday =
+                      DateTime.parse(DateTime.now().toString());
+                  if (date == DateFormat.MMMd().format(dateToday).toString()) {
+                    date = DateFormat.MMMd().format(fullDate).toString();
+                  } else {
+                    date = DateFormat.jm().format(fullDate).toString();
+                  }
+                }
+
+                print(date);
                 return MessageTile(
                   message: data['message'],
                   sendByMe: Constants.loggedInUserName == data["sender"],
+                  seen: data['seen'],
+                  date: date,
                 );
               }).toList(),
             ),
           );
         }
         return Spacer();
-
-        // if (snapshot.connectionState == ConnectionState.waiting) {
-        //   return Text("Loading");
-        // }
       },
     );
   }
 }
-
-/**
-Widget chatMessages(BuildContext context) {
-  final Stream<QuerySnapshot> _usersStream = FirebaseFirestore.instance
-      .collection('ChatRoom')
-      .doc(wichatRoomId)
-      .collection('Chats')
-      .orderBy('time').snapshots();
-  return StreamBuilder<QuerySnapshot>(
-    stream: chats,
-    builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-      return snapshot.hasData
-          ? ListView.builder(
-          itemCount: snapshot.data!.docs.length,
-          itemBuilder: (context, index) {
-            print(snapshot.data!.docs.length);
-            return MessageTile(
-              message: snapshot.,
-              sendByMe: true,
-            );
-            //   return MessageTile(
-            //     message: snapshot.data?.docs[index].data()!["message"],
-            //     sendByMe: Constants.loggedInUserName == snapshot.data?.docs[index].data()!["sendBy"],
-            //   // );
-            //   // return MessageTile(
-            //   //   message: data["message"],
-            //   //   sendByMe: Constants.loggedInUserName == data!["sender"],
-            //   // );
-            // );
-          })
-          : Container();
-    },
-  );
-}
-
-    **/

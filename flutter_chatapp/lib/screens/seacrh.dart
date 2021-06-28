@@ -66,7 +66,7 @@ class _SearchScreenState extends State<SearchScreen> {
           MaterialPageRoute(
               builder: (context) => ChatScreen(
                   // chatRoomId: chatRoomId,
-             reciver: userName, chatRoomID: chatRoomId,
+             reciver: userName, chatRoomID: chatRoomId,recipientEmail:roomUserEmail,
               )));
     } 
   }
@@ -94,7 +94,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     gradient: LinearGradient(
                         begin: Alignment.bottomLeft,
                         end: Alignment.topRight, // 4c5258
-                        colors: [Color(0xff2f3337), Color(0xff4c5258)]),
+                        colors: [Colors.blueAccent, Colors.blue]),
                     borderRadius: BorderRadius.circular(32),
                   ),
                   child: Row(

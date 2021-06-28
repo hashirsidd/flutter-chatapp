@@ -14,7 +14,7 @@ class Authenticate extends StatefulWidget {
 
 class _AuthenticateState extends State<Authenticate> {
   bool showSignIn = true;
-  bool isUserLoggedin = false;
+  bool? isUserLoggedin = false;
   void toggleView(){
     setState(() {
       showSignIn = !showSignIn;
@@ -23,8 +23,7 @@ class _AuthenticateState extends State<Authenticate> {
   getUserInfo()async{
     Constants.loggedInUserName = await HelperFunction.getusernamesharepreference() ;
     Constants.loggedInUserEmail = await HelperFunction.getuseremailsharepreference() ;
-    isUserLoggedin = (await HelperFunction.getuserloggedinsharepreference())!;
-                       print(isUserLoggedin);
+    isUserLoggedin = await HelperFunction.getuserloggedinsharepreference();
   }
   @override
   void initState() {

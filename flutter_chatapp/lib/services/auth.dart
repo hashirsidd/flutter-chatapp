@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_chatapp/helper/constants.dart';
 import 'package:flutter_chatapp/helper/helperFunction.dart';
 import 'package:flutter_chatapp/model/user.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthMethods {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,7 +25,7 @@ class AuthMethods {
 
   Future signUpWithEmailAndPassword({required String email, required String password}) async {
     email = email.trim();
-    password = password..trim();
+    password = password.trim();
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
@@ -52,9 +53,25 @@ class AuthMethods {
       HelperFunction.saveuserloggedinsharepreference(false);
       HelperFunction.saveuseremailsharepreference("");
       HelperFunction.saveusernamesharepreference("");
-      return await _auth.signOut();
+      HelperFunction.saveuseridsharepreference("");
+
+      return Constants.isGoogleUser ? await GoogleSignIn().signOut() : await _auth.signOut();
     } catch (e) {
       print(e.toString());
     }
+  }
+
+  Future signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    var authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+    return authResult.user;
   }
 }

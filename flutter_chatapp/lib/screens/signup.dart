@@ -39,18 +39,22 @@ class _SignUpState extends State<SignUp> {
               password: passwordTextEditingController.text.trim())
           .then((value) {
         // print("${value.userId}");
-        Map<String, String> userMap = {
+        Map<String, dynamic> userMap = {
           "name": userNameTextEditingController.text.trim(),
-          'email': emailTextEditingController.text.trim()
+          'email': emailTextEditingController.text.trim()    ,
+          'status' : "Online",
+          'googleUser': false,
         };
-        dbMethods.uploadUserInfo(userMap);
         HelperFunction.saveuserloggedinsharepreference(true);
         HelperFunction.saveusernamesharepreference(
             userNameTextEditingController.text.trim());
         HelperFunction.saveuseremailsharepreference(
             emailTextEditingController.text.trim());
+        HelperFunction.saveuseridsharepreference(value.userId);
         Constants.loggedInUserName = userNameTextEditingController.text.trim();
         Constants.loggedInUserEmail = emailTextEditingController.text.trim();
+        dbMethods.uploadUserInfo(userMap,Constants.loggedInUserEmail);
+
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => ChatRoom()));
       });
@@ -226,10 +230,43 @@ class _SignUpState extends State<SignUp> {
                             ),
                             SizedBox(height: 18),
                             // signin with google
-                            longButton(
-                              bgColor: Colors.white,
-                              textColor: Color(0xff2c69e1),
-                              text: "Sign Up with Google",
+                            GestureDetector(
+                              onTap: (){
+                                authMethods.signInWithGoogle().then((value) {
+                                  if (value != null) {
+                                    // userInfo = value;
+                                    String name = value.displayName;
+                                    String email = value.email.toLowerCase();
+                                    name = '${name[0].toUpperCase()}${name.substring(1).toLowerCase()}';
+                                    HelperFunction
+                                        .saveuserloggedinsharepreference(true);
+                                    HelperFunction.saveusernamesharepreference(
+                                        name);
+                                    HelperFunction.saveuseremailsharepreference(
+                                        email);
+                                    Constants.loggedInUserName = name;
+                                    Constants.loggedInUserEmail = email;
+                                    Constants.isGoogleUser = true;
+
+                                    Map<String, dynamic> userMap = {
+                                      "name": name,
+                                      'email': email    ,
+                                      'status' : "Online" ,
+                                      'googleUser': true,
+                                    };
+                                    dbMethods.uploadUserInfo(userMap,value.email.toString().toLowerCase());
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => ChatRoom()));
+                                  }
+                                });
+                              },
+                              child: longButton(
+                                bgColor: Colors.white,
+                                textColor: Color(0xff2c69e1),
+                                text: "Sign Up with Google",
+                              ),
                             ),
                             SizedBox(height: 18),
                             Row(

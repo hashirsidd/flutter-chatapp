@@ -9,6 +9,7 @@ import 'package:flutter_chatapp/screens/signup.dart';
 import 'package:flutter_chatapp/services/auth.dart';
 import 'package:flutter_chatapp/services/database.dart';
 import 'package:flutter_chatapp/widget.dart';
+import 'package:intl/intl.dart';
 
 import 'chatroomScreen.dart';
 
@@ -43,7 +44,6 @@ class _SigninState extends State<Signin> {
               passwordTextEditingController.text.trim())
           .then((val) {
         if (val != null) {
-
           dbMethods
               .getUserByEmail(emailTextEditingController.text.trim())
               .then((value) {
@@ -54,9 +54,18 @@ class _SigninState extends State<Signin> {
               HelperFunction.saveuserloggedinsharepreference(true);
               HelperFunction.saveusernamesharepreference(data['name']);
               HelperFunction.saveuseremailsharepreference(data['email']);
+
               Constants.loggedInUserName = data['name'];
               Constants.loggedInUserEmail = data['email'];
-              // print( "username : ${Constants.loggedInUserName }") ;
+              // Constants.uid = value.userId;
+
+              FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(Constants.loggedInUserEmail)
+                  .update({
+                'status': "Online",
+              });
+
               Navigator.pushReplacement(
                   context, MaterialPageRoute(builder: (context) => ChatRoom()));
             }
@@ -203,10 +212,47 @@ class _SigninState extends State<Signin> {
                             ),
                             SizedBox(height: 18),
                             // signin with google
-                            longButton(
-                              bgColor: Colors.white,
-                              textColor: Color(0xff2c69e1),
-                              text: "Sign In with Google",
+                            GestureDetector(
+                              onTap: () {
+                                authMethods.signInWithGoogle().then((value) {
+
+                                  if (value != null) {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+                                    // userInfo = value;
+                                    String name = value.displayName;
+                                    String email = value.email.toLowerCase();
+                                    name = '${name[0].toUpperCase()}${name.substring(1).toLowerCase()}';
+                                    HelperFunction
+                                        .saveuserloggedinsharepreference(true);
+                                    HelperFunction.saveusernamesharepreference(
+                                        name);
+                                    HelperFunction.saveuseremailsharepreference(
+                                        email);
+                                    Constants.loggedInUserName = name;
+                                    Constants.loggedInUserEmail = email;
+                                    Constants.isGoogleUser = true;
+
+                                    Map<String, dynamic> userMap = {
+                                      "name": name,
+                                      'email': email    ,
+                                      'status' : "Online" ,
+                                      'googleUser': true,
+                                    };
+                                    dbMethods.uploadUserInfo(userMap,value.email.toString().toLowerCase());
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) => ChatRoom()));
+                                  }
+                                });
+                              },
+                              child: longButton(
+                                bgColor: Colors.white,
+                                textColor: Color(0xff2c69e1),
+                                text: "Sign In with Google",
+                              ),
                             ),
                             SizedBox(height: 18),
                             Row(
@@ -221,10 +267,7 @@ class _SigninState extends State<Signin> {
                                 ),
                                 GestureDetector(
                                   onTap: () {
-                                    print("going to Signup");
                                     widget.toggle();
-                                    // Navigator.pushReplacement(
-                                    //     context, MaterialPageRoute(builder: (context) => SignUp()));
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.only(

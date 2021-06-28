@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chatapp/helper/authenticate.dart';
 import 'package:flutter_chatapp/helper/helperFunction.dart';
-
 import 'package:flutter_chatapp/screens/chatroomScreen.dart';
 import 'package:flutter_chatapp/screens/login.dart';
 import 'package:flutter_chatapp/screens/signup.dart';
@@ -24,6 +23,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+
   bool isUserLoggedin = false;
   getUserInfo() async {
     await HelperFunction.getuserloggedinsharepreference().then((value) {
